@@ -99,7 +99,7 @@ func isValidZip(zip string) bool {
 	if len(zip) != 5 {
 		return false
 	}
-	state, found := us[zip[:3]]
+	_, found := us[zip[:3]]
 	return found
 }
 
