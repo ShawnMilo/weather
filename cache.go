@@ -21,7 +21,7 @@ func getCache(zip string) (Weather, bool) {
 	mu.RLock()
 	w, found := cache[zip]
 	mu.RUnlock()
-	if w.isExpired {
+	if w.isExpired() {
 		go deleteCache(zip)
 		return w, false
 	}
