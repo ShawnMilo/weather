@@ -39,6 +39,11 @@ type Weather struct {
 	Timestamp     time.Time `json:"timestamp,omitempty"`
 }
 
+func (w Weather) isExpired() bool {
+	cutoff := time.Now().Add(-cacheDuration)
+	return w.Timestamp.Before(cutoff)
+}
+
 // Do a live lookup.
 func lookup(zip string) (Weather, error) {
 	var w Weather
@@ -107,16 +112,4 @@ func isValidZip(zip string) bool {
 	return found
 }
 
-func pruneCache() {
-	for {
-		time.Sleep(cacheDuration)
-		mu.Lock()
-		cutoff := time.Now().Add(-cacheDuration)
-		for zip, w := range cache {
-			if w.Timestamp.Before(cutoff) {
-				go deleteCache(zip)
-			}
-		}
-		mu.Unlock()
-	}
-}
+

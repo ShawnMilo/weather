@@ -21,6 +21,10 @@ func getCache(zip string) (Weather, bool) {
 	mu.RLock()
 	w, found := cache[zip]
 	mu.RUnlock()
+	if w.isExpired {
+		go deleteCache(zip)
+		return w, false
+	}
 	return w, found
 }
 
@@ -34,4 +38,17 @@ func deleteCache(zip string) {
 	mu.Lock()
 	delete(cache, zip)
 	mu.Unlock()
+}
+
+func pruneCache() {
+	for {
+		time.Sleep(cacheDuration)
+		mu.Lock()
+		for zip, w := range cache {
+			if w.isExpired() {
+				go deleteCache(zip)
+			}
+		}
+		mu.Unlock()
+	}
 }
