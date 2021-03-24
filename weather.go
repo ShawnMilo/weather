@@ -83,10 +83,11 @@ func Get(zip string) (Weather, error) {
 	if err != nil {
 		return w, ErrLookupFailure
 	}
+	setCache(zip, w)
+
 	if w.Temperature == 0 && w.Humidity == 0 {
 		return w, ErrNoData
 	}
-	setCache(zip, w)
 	return w, nil
 }
 
