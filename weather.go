@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 	"unicode"
 )
@@ -17,18 +16,6 @@ var ErrLookupFailure = errors.New("unable to retrieve data")
 
 var key = os.Getenv("WEATHER_TOKEN")
 var weatherURL = "https://api.openweathermap.org/data/2.5/weather?units=imperial&zip=%s,US&appid=%s"
-
-// Note: Cache would probably be Redis, to allow for horizontal
-// scaling; doing this to avoid dependencies for this demo.
-var mu sync.RWMutex
-var cache = make(map[string]Weather)
-
-// Possibly configurable via environment variable or exported function.
-var cacheDuration = time.Minute * 60
-
-func init() {
-	go pruneCache()
-}
 
 // Generated with the help of https://mholt.github.io/json-to-go/
 type weatherReport struct {
@@ -94,19 +81,6 @@ func Get(zip string) (Weather, error) {
 	return w, nil
 }
 
-func getCache(zip string) (Weather, bool) {
-	mu.RLock()
-	w, found := cache[zip]
-	mu.RUnlock()
-	return w, found
-}
-
-func setCache(zip string, w Weather) {
-	mu.Lock()
-	cache[zip] = w
-	mu.Unlock()
-}
-
 // Strip non-ints and return first five characters.
 func strip(zip string) string {
 	out := make([]rune, 0, len(zip))
@@ -141,10 +115,4 @@ func pruneCache() {
 		}
 		mu.Unlock()
 	}
-}
-
-func deleteCache(zip string) {
-	mu.Lock()
-	delete(cache, zip)
-	mu.Unlock()
 }
