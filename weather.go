@@ -13,6 +13,7 @@ import (
 
 var ErrInvalidZip = errors.New("invalid zip code")
 var ErrLookupFailure = errors.New("unable to retrieve data")
+var ErrNoData = errors.New("no data for zip code")
 
 var key = os.Getenv("WEATHER_TOKEN")
 var weatherURL = "https://api.openweathermap.org/data/2.5/weather?units=imperial&zip=%s,US&appid=%s"
@@ -76,6 +77,9 @@ func Get(zip string) (Weather, error) {
 	w, err := lookup(zip)
 	if err != nil {
 		return w, ErrLookupFailure
+	}
+	if w.Temperature == 0 && w.Humidity == 0 {
+		return w, ErrNoData
 	}
 	setCache(zip, w)
 	return w, nil
